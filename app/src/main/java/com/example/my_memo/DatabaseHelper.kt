@@ -1,6 +1,8 @@
 package com.example.my_memo
 
+import android.util.Log
 import android.content.ContentValues
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -8,17 +10,17 @@ import android.database.sqlite.SQLiteOpenHelper
 class DatabaseHelper (context: Context) : SQLiteOpenHelper(context,DB_NAME, null,DB_VERSION){
 
     companion object{
-        private val DB_NAME = "UserDB"
-        private val DB_VERSION = 1;
+        private val DB_NAME = "MemoDB"
+        private val DB_VERSION = 1
         private val TABLE_NAME = "users"
         private val ID  = "id"
-        private val FIRST_NAME = "FirstName"
-        private val LAST_NAME = "LastName"
+        private val TITLE = "Title"
+        private val PARAGRAPH= "paragraph"
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
         val createTable = "CREATE TABLE $TABLE_NAME" +
-        "($ID Integer PRIMARY KEY," + "$FIRST_NAME TEXT," + "$LAST_NAME TEXT)"
+        "($ID Integer," + "$TITLE TEXT," + "$PARAGRAPH TEXT)"
         db?.execSQL(createTable)
     }
 
@@ -26,40 +28,39 @@ class DatabaseHelper (context: Context) : SQLiteOpenHelper(context,DB_NAME, null
         fun addUser(user: Users) : Boolean {
             val db = this.writableDatabase
             val values = ContentValues()
-
-            values.put(FIRST_NAME, user.firstName)
-            values.put(LAST_NAME,user.lastName)
+            values.put(ID,user.id)
+            values.put(TITLE, user.title)
+            values.put(PARAGRAPH,user.paragraph)
             val _success = db.insert(TABLE_NAME, null, values)
             db.close()
             return (Integer.parseInt("$_success")!=-1)
         }
 
-        fun getAllUser() : String{
-            var allUser: String = "";
+        fun getAllUser() : ArrayList<Users>{
+            var memoList = arrayListOf<Users>()
+
             val db = readableDatabase
             val selectALLQuery = "SELECT * FROM $TABLE_NAME"
             val cursor = db.rawQuery(selectALLQuery,null)
-            var id : String = ""
-            var firstName  = ""
-            var lastName = ""
+            var user : Users
             if(cursor!=null){
                 if(cursor.moveToFirst()){
                     do{
-                        id = cursor.getString(cursor.getColumnIndex(ID))
-                        firstName = cursor.getString(cursor.getColumnIndex(FIRST_NAME))
-                        lastName = cursor.getString(cursor.getColumnIndex(LAST_NAME))
+                       // Log.d(TAG,"조회 firstName : " +  Integer.parseInt(cursor.getString(cursor.getColumnIndex(TITLE))))
 
-                        allUser  = "$allUser \n $id $firstName $lastName"
+                        user = Users()
+                        user.id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(ID)))
+                        user.title=cursor.getString(cursor.getColumnIndex(TITLE))
+                        user.paragraph=cursor.getString(cursor.getColumnIndex(PARAGRAPH))
+
+                        memoList.add(user)
                     }while(cursor.moveToNext())
                 }
             }
             cursor.close()
             db.close()
-            return allUser
+
+
+            return memoList
         }
     }
-
-
-
-
-}
